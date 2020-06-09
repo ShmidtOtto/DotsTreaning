@@ -11,17 +11,25 @@
   }
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("click", function(event){
+    console.log(event);
+    let newDot = new Dot();
+    newDot.pos.x = event.clientX;
+    newDot.pos.y = event.clientY;
+    dotsList.push(newDot);
+  })
   const cfg = {
     hue: 0,
     bgfFillColor: "rgba(50, 50, 50, .05)",
     dirsCount: 4,
     stepsToTurn: 20,
     dotSize: 6,
-    dotsCount: 300,
-    dotVelocety: 2,
+    dotsCount: 20,
+    dotVelocety: 6,
     distance: 70,
     gradiantLength: 5,
-    gridAngel: 45
+    gridAngel: 45,
+    acrRadius: 20
   }
   function drawRect(color, x, y, w, h, shadowColor, shadowBlur, gco){
     ctx.globalCompositionOperation = gco;
@@ -49,6 +57,31 @@
       let x = this.pos.x - size / 2;
       let y = this.pos.y - size / 2;
       drawRect(color, x, y, size, size, color, blur, "lighter");
+    }
+    drawArc(){
+      let x = this.pos.x;
+      let y = this.pos.y;
+      ctx.beginPath();
+      ctx.arc(x, y, cfg.acrRadius, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+    drawLine(el){
+      let x = this.pos.x;
+      let y = this.pos.y;
+      el.forEach(function(item){
+        let dx = item.pos.x;
+        let dy = item.pos.y;
+        let dxx = (dx - x);
+        let dyy = (dy - y);
+        let distance = Math.sqrt(Math.pow(dxx, 2) + Math.pow(dyy, 2));
+        if (distance < 200){
+          ctx.moveTo(x, y);
+          ctx.lineTo(dx, dy);
+        }
+        dx = dy = dxx = dyy = null;
+      });
+      ctx.lineWidth = 2;
+      ctx.stroke();
     }
     moveDot(){
       this.step ++;
@@ -94,12 +127,15 @@
       el.moveDot();
       el.redrawDot();
       el.changeDir();
+      el.drawArc();
+      el.drawLine(dotsList);
       el.killDot(index);
     });
 
   }
 
   function loop(){
+    ctx.clearRect(0, 0, cw, ch);//Очищает всё поле
     drawRect(cfg.bgfFillColor, 0, 0, cw, ch, 0, 0);
     addDot();
     refreshDots();
