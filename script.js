@@ -12,24 +12,49 @@
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
   window.addEventListener("click", function(event){
-    console.log(event);
     let newDot = new Dot();
     newDot.pos.x = event.clientX;
     newDot.pos.y = event.clientY;
     dotsList.push(newDot);
+  });
+  window.addEventListener("keydown", function(event){
+    console.log(event);
+    switch(event.key){
+      case "ArrowUp":
+        dotsList.forEach((el) => {
+          el.pos.y -= cfg.moveDistance;
+        });
+        break;
+      case "ArrowDown":
+        dotsList.forEach((el) => {
+          el.pos.y += cfg.moveDistance;
+        });
+        break;
+      case "ArrowLeft":
+        dotsList.forEach((el) => {
+          el.pos.x -= cfg.moveDistance;
+        });
+        break;
+      case "ArrowRight":
+        dotsList.forEach((el) => {
+          el.pos.x += cfg.moveDistance;
+        });
+        break;
+    }
   })
   const cfg = {
     hue: 0,
     bgfFillColor: "rgba(50, 50, 50, .05)",
-    dirsCount: 4,
-    stepsToTurn: 20,
+    dirsCount: 5,
+    stepsToTurn: 2,
     dotSize: 6,
     dotsCount: 20,
-    dotVelocety: 6,
+    dotVelocety: 10,
     distance: 70,
     gradiantLength: 5,
-    gridAngel: 45,
-    acrRadius: 20
+    gridAngel: 0,
+    acrRadius: 20,
+    moveDistance: 30
   }
   function drawRect(color, x, y, w, h, shadowColor, shadowBlur, gco){
     ctx.globalCompositionOperation = gco;
@@ -37,7 +62,11 @@
     ctx.shadowBlur = shadowBlur || 1;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
-
+  }
+  function drawArc(x, y, radius){
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.stroke();
   }
   class Dot {
     constructor(){
@@ -128,10 +157,29 @@
       el.redrawDot();
       el.changeDir();
       el.drawArc();
-      el.drawLine(dotsList);
+      //el.drawLine(dotsList);
       el.killDot(index);
     });
-
+  }
+  function refreshArcMap(dots){
+    let radius = 0;
+    let X = 0;
+    let Y = 0;
+    dots.forEach(function(el){
+      X += el.pos.x;
+      Y += el.pos.y;
+    });
+    X = X / dots.length;
+    Y = Y / dots.length;
+    dots.forEach(function(el){
+      let dxx = X - el.pos.x;
+      let dyy = Y - el.pos.y;
+      let distance = Math.sqrt(Math.pow(dxx, 2) + Math.pow(dyy, 2));
+      if(distance > radius){
+        radius = distance;
+      }
+    });
+    drawArc(X, Y, radius);
   }
 
   function loop(){
@@ -139,6 +187,7 @@
     drawRect(cfg.bgfFillColor, 0, 0, cw, ch, 0, 0);
     addDot();
     refreshDots();
+    refreshArcMap(dotsList);
     requestAnimationFrame(loop);
   }
   loop();
